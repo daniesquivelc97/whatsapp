@@ -14,4 +14,6 @@ class ColorUtils {
 
   static const Color backgoundDark = Color(0xFF111B21);
   static const Color backgoundLight = Color(0xFFFFFFFF);
+
+  static const Color greyBackground = Color(0xFF202C33);
 }
