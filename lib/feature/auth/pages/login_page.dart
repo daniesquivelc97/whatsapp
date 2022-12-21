@@ -1,46 +1,57 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:whatsapp_messenger/common/extensions/custom_theme_extension.dart';
 import 'package:whatsapp_messenger/common/helpers/show_alert_dialog.dart';
 import 'package:whatsapp_messenger/common/utils/color_utils.dart';
 import 'package:whatsapp_messenger/common/widgets/custom_elevated_button.dart';
+import 'package:whatsapp_messenger/feature/auth/controller/auth_controller.dart';
 import 'package:whatsapp_messenger/feature/auth/widgets/custom_text_field.dart';
 
 import '../../../common/widgets/custom_icon_button.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   late TextEditingController countryNameController;
   late TextEditingController countryCodeController;
   late TextEditingController phoneNumberController;
 
   sendCodeToPhone() {
-    final phone = phoneNumberController.text;
+    final phoneNumber = phoneNumberController.text;
     final countryName = countryNameController.text;
+    final countryCode = countryCodeController.text;
 
-    if (phone.isEmpty) {
+    if (phoneNumber.isEmpty) {
       return showAlertDialog(
-          context: context, message: 'Please enter your phone number');
-    } else if (phone.length < 9) {
+        context: context,
+        message: 'Please enter your phone number',
+      );
+    } else if (phoneNumber.length < 10) {
       return showAlertDialog(
         context: context,
         message:
             "The phone number you entered is too short for the country: $countryName.\n\n"
             "Include your area code if you haven't",
       );
-    } else if (phone.length > 10) {
+    } else if (phoneNumber.length > 10) {
       return showAlertDialog(
         context: context,
         message:
             'The phone number you entered is too long for the country: $countryName',
       );
     }
+
+    // request a verification code
+    ref.read(authControllerProvider).sendSmsCode(
+          context: context,
+          phoneNumber: '+$countryCode$phoneNumber',
+        );
   }
 
   showCountryCodePicker() {

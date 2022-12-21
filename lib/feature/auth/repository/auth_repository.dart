@@ -21,12 +21,40 @@ class AuthRepository {
     required this.firestore,
   });
 
+  void verifySmsCode({
+    required BuildContext context,
+    required String smsCodeId,
+    required String smsCode,
+    required bool mounted,
+  }) async {
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: smsCodeId,
+        smsCode: smsCode,
+      );
+      await auth.signInWithCredential(credential);
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        Routes.userInfo,
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      showAlertDialog(
+        context: context,
+        message: e.toString(),
+      );
+    }
+  }
+
   void sendSmsCode({
     required BuildContext context,
     required String phoneNumber,
   }) async {
     try {
       await auth.verifyPhoneNumber(
+          phoneNumber: phoneNumber,
           verificationCompleted: (PhoneAuthCredential credential) async {
             await auth.signInWithCredential(credential);
           },

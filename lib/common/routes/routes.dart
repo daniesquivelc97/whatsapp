@@ -21,10 +21,10 @@ class Routes {
           builder: (context) => const LoginPage(),
         );
       case verification:
-        final Map args = settings.name as Map;
+        final Map args = settings.arguments as Map;
         return MaterialPageRoute(
           builder: (context) => VerificationPage(
-            verificationId: args['verificationId'],
+            smsCodeId: args['smsCodeId'],
             phoneNumber: args['phoneNumber'],
           ),
         );
@@ -34,11 +34,12 @@ class Routes {
         );
       default:
         return MaterialPageRoute(
-            builder: (context) => const Scaffold(
-                  body: Center(
-                    child: Text('No Page Route Provided'),
-                  ),
-                ));
+          builder: (context) => const Scaffold(
+            body: Center(
+              child: Text('No Page Route Provided'),
+            ),
+          ),
+        );
     }
   }
 }
