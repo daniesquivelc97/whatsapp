@@ -1,5 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:whatsapp_messenger/common/extensions/custom_theme_extension.dart';
+import 'package:whatsapp_messenger/common/helpers/show_alert_dialog.dart';
 import 'package:whatsapp_messenger/common/utils/color_utils.dart';
 import 'package:whatsapp_messenger/common/widgets/custom_elevated_button.dart';
 import 'package:whatsapp_messenger/common/widgets/custom_icon_button.dart';
@@ -16,6 +21,9 @@ class UserInfoPage extends StatefulWidget {
 }
 
 class _UserInfoPageState extends State<UserInfoPage> {
+  File? imageCamera;
+  Uint8List? imageGallery;
+
   imagePickerTypeBottomSheet() {
     return showModalBottomSheet(
       context: context,
@@ -50,36 +58,52 @@ class _UserInfoPageState extends State<UserInfoPage> {
               children: [
                 const SizedBox(width: 20),
                 imagePickerIcon(
-                  onTap: () {
-                    print('HOla');
-                  },
+                  onTap: pickImageFromCamera,
                   icon: Icons.camera_alt_rounded,
                   text: 'Camera',
                 ),
                 const SizedBox(width: 15),
                 imagePickerIcon(
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(context);
-                    Navigator.of(context).push(
+                    final image = await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const ImagePickerPage(),
                       ),
                     );
+                    if (image == null) return;
+                    setState(() {
+                      imageGallery = image;
+                      imageCamera = null;
+                    });
                   },
                   icon: Icons.photo_camera_back_rounded,
                   text: 'Gallery',
                 ),
                 const SizedBox(width: 15),
                 TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const ImagePickerPage(),
-                        ),
-                      );
-                    },
-                    child: const Text('Prueba')),
+                  onPressed: () async {
+                    print('hola');
+                    Navigator.pop(context);
+                    final image = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ImagePickerPage(),
+                      ),
+                    );
+                    if (image == null) return;
+                    setState(
+                      () {
+                        imageGallery = image;
+                        imageCamera = null;
+                      },
+                    );
+                  },
+                  child: const Text('Prueba'),
+                ),
+                TextButton(
+                  onPressed: pickImageFromCamera,
+                  child: const Text('Camara'),
+                ),
               ],
             ),
             const SizedBox(height: 15),
@@ -87,6 +111,19 @@ class _UserInfoPageState extends State<UserInfoPage> {
         );
       },
     );
+  }
+
+  pickImageFromCamera() async {
+    Navigator.of(context).pop();
+    try {
+      final image = await ImagePicker().pickImage(source: ImageSource.camera);
+      setState(() {
+        imageCamera = File(image!.path);
+        imageGallery = null;
+      });
+    } catch (e) {
+      showAlertDialog(context: context, message: e.toString());
+    }
   }
 
   imagePickerIcon({
@@ -148,13 +185,28 @@ class _UserInfoPageState extends State<UserInfoPage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: context.theme.photoIconBgColor,
+                  border: Border.all(
+                    color: imageCamera == null && imageGallery == null
+                        ? Colors.transparent
+                        : context.theme.greyColor!.withOpacity(0.4),
+                  ),
+                  image: imageCamera != null || imageGallery != null
+                      ? DecorationImage(
+                          fit: BoxFit.cover,
+                          image: imageGallery != null
+                              ? MemoryImage(imageGallery!) as ImageProvider
+                              : FileImage(imageCamera!),
+                        )
+                      : null,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 3, right: 3),
                   child: Icon(
                     Icons.add_a_photo_rounded,
                     size: 48,
-                    color: context.theme.photoIconColor,
+                    color: imageCamera == null && imageGallery == null
+                        ? context.theme.photoIconColor
+                        : Colors.transparent,
                   ),
                 ),
               ),
